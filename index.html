@@ -5,11 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Music Birthday for KATCHAN</title>
 
-    <meta property="og:title" content="Happy Birthdayかっちゃん!">
+    <meta property="og:title" content="Happy Birthday かっちゃん!">
     <meta property="og:description" content="音符を集めて楽器をコンプリートしよう！誕生日おめでとう！">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://Lanchangames.github.io/kasumihappybirthday/">
+    <meta property="og:url" content="https:/Lanchangames/.github.io/kasumihappybirthday/">
     <meta property="og:image" content="https://raw.githubusercontent.com/Lanchangames/kasumihappybirthday/main/image.png">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Happy Birthday かっちゃん!">
+    <meta name="twitter:description" content="音符を集めて楽器をコンプリートしよう！">
+    <meta name="twitter:image" content="https://raw.githubusercontent.com/Lanchangames/kasumihappybirthday/main/image.png">
 
     <style>
         :root {
@@ -76,7 +81,7 @@
 
     <div id="title-screen">
         <h1 style="color:var(--accent-color); font-size:32px;">Happy Birthday!</h1>
-        <p>かっちゃん、お誕生日おめでとう！<br>40個の音符を集めて、メッセージをコンプリートしてね！</p>
+        <p>かっちゃん、お誕生日おめでとう！<br>40個の音符を集めて、思い出をコンプリートしてね！</p>
         <button onclick="start()">START!</button>
     </div>
 
@@ -181,9 +186,28 @@
     function resupply() { if(gameState !== 'play') return; const target = isFever ? 12 : 6; while(notes.length < target) notes.push(new Note(isFever)); }
 
     function activateFever() {
-        isFever = true; fever = 100; document.body.classList.add('fever-active'); playNote(880, 'square', 0.5);
-        notes.forEach(n => { if(n.fake) n.el.remove(); }); notes = notes.filter(n => !n.fake);
-        setTimeout(() => { isFever = false; fever = 0; document.body.classList.remove('fever-active'); notes.forEach(n => n.el.remove()); notes = []; updateUI(); resupply(); }, 7000);
+        isFever = true; 
+        fever = 100; 
+        document.body.classList.add('fever-active'); 
+        playNote(880, 'square', 0.5);
+
+        // お邪魔（ドクロ）を消去
+        notes.forEach(n => { if(n.fake) n.el.remove(); }); 
+        notes = notes.filter(n => !n.fake);
+
+        // フィーバー時間を5秒（5000ms）に設定
+        setTimeout(() => { 
+            isFever = false; 
+            fever = 0; 
+            document.body.classList.remove('fever-active'); 
+            
+            // フィーバー終了時に一旦リセットして通常モードへ
+            notes.forEach(n => n.el.remove()); 
+            notes = []; 
+            
+            updateUI(); 
+            resupply(); 
+        }, 5000); 
     }
 
     function updateUI() { document.getElementById('cur-count').innerText = `${score} / ${GOAL}`; document.getElementById('fever-fill').style.width = fever + '%'; }
