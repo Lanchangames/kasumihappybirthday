@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Music Birthday for KATCHAN</title>
 
-    <meta property="og:title" content="Happy Birthday KATCHAN!">
-    <meta property="og:description" content="楽器を集めて思い出をコンプリートしよう！誕生日おめでとう！">
+    <meta property="og:title" content="Happy Birthday かっちゃん!">
+    <meta property="og:description" content="音符を集めて楽器をコンプリートしよう！誕生日おめでとう！">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https:/Lanchangames/.github.io/kasumihappybirthday/">
+    <meta property="og:url" content="https://Lanchangames.github.io/kasumihappybirthday/">
     <meta property="og:image" content="https://raw.githubusercontent.com/Lanchangames/kasumihappybirthday/main/image.png">
 
     <style>
@@ -30,9 +30,10 @@
         body.fever-active { background-color: #330033; animation: bg-flash 0.5s infinite alternate; }
         @keyframes bg-flash { from { background-color: #440044; } to { background-color: #660066; } }
 
+        /* --- UIバー --- */
         #ui { position: absolute; top: 0; width: 100%; z-index: 100; padding-top: env(safe-area-inset-top); background: rgba(0,0,0,0.85); pointer-events: none; border-bottom: 2px solid #333; }
-        #top-collection { display: flex; justify-content: center; gap: 10px; padding: 8px 0; pointer-events: auto; }
-        .top-item { font-size: 24px; opacity: 0.15; transition: 0.5s; cursor: pointer; }
+        #top-collection { display: flex; justify-content: center; gap: 10px; padding: 4px 0; }
+        .top-item { font-size: 20px; opacity: 0.15; transition: 0.5s; }
         .top-item.active { opacity: 1; filter: drop-shadow(0 0 8px white); transform: scale(1.1); }
         #score-panel { display: flex; justify-content: center; align-items: baseline; gap: 25px; padding: 8px 0; }
         .score-num { font-size: 24px; font-weight: bold; }
@@ -40,16 +41,28 @@
         #fever-bar { width: 100%; height: 8px; background: #222; }
         #fever-fill { width: 0%; height: 100%; background: var(--fever-color); transition: width 0.1s linear; box-shadow: 0 0 15px var(--fever-color); }
 
+        /* --- ゲーム要素 --- */
         .note { position: absolute; font-size: 55px; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; z-index: 10; filter: drop-shadow(0 0 12px currentColor); }
-        
-        #title-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+
+        /* --- モーダル --- */
+        .modal { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
         #msg-card { 
             display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            width: 85%; background: white; color: #333; padding: 25px; border-radius: 20px; 
+            width: 85%; background: white; color: #333; padding: 20px; border-radius: 20px; 
             z-index: 2000; text-align: center; box-shadow: 0 0 50px var(--accent-color); 
             max-height: 80vh; overflow-y: auto;
         }
-        button { background: var(--accent-color); color: white; border: none; padding: 15px 40px; border-radius: 40px; font-size: 18px; font-weight: bold; margin-top: 15px; }
+        
+        /* --- コレクション画面 --- */
+        #collection-screen { display: none; background: #111; z-index: 3000; overflow-y: auto; flex-direction: column; align-items: center; padding-top: 60px; }
+        .col-list { width: 90%; display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px; }
+        .col-item { background: #222; border-radius: 15px; padding: 15px; display: flex; align-items: center; gap: 15px; text-align: left; border: 1px solid #444; }
+        .col-icon { font-size: 40px; }
+        .col-text { font-size: 12px; line-height: 1.4; color: #ccc; }
+        .locked { opacity: 0.3; filter: grayscale(1); }
+
+        button { background: var(--accent-color); color: white; border: none; padding: 12px 30px; border-radius: 40px; font-size: 16px; font-weight: bold; margin-top: 10px; cursor: pointer; }
+        .btn-sub { background: #444; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -57,11 +70,8 @@
 <div id="game-container">
     <div id="ui">
         <div id="top-collection">
-            <span class="top-item" id="t-🎸" onclick="showPastMessage('🎸')">🎸</span>
-            <span class="top-item" id="t-🎹" onclick="showPastMessage('🎹')">🎹</span>
-            <span class="top-item" id="t-🥁" onclick="showPastMessage('🥁')">🥁</span>
-            <span class="top-item" id="t-🎤" onclick="showPastMessage('🎤')">🎤</span>
-            <span class="top-item" id="t-🎷" onclick="showPastMessage('🎷')">🎷</span>
+            <span class="top-item" id="t-🎸">🎸</span><span class="top-item" id="t-🎹">🎹</span>
+            <span class="top-item" id="t-🥁">🥁</span><span class="top-item" id="t-🎤">🎤</span><span class="top-item" id="t-🎷">🎷</span>
         </div>
         <div id="score-panel">
             <div style="text-align:center;"><span style="font-size:9px; color:var(--sub-color);">BEST TIME</span><br><span id="hi-score" class="score-num">--.--</span></div>
@@ -71,10 +81,18 @@
         <div id="fever-bar"><div id="fever-fill"></div></div>
     </div>
 
-    <div id="title-screen">
-        <h1 style="color:var(--accent-color); font-size:32px;">Happy Birthday!</h1>
-        <p id="home-desc">音符を50個集めて楽器をコンプリートしよう！<br>集めた楽器をタップするとメッセージが読めるよ。</p>
-        <button onclick="start()">START!</button>
+    <div id="title-screen" class="modal">
+        <h1 style="color:var(--accent-color); font-size:32px; margin-bottom:5px;">Music Birthday!</h1>
+        <p>かっちゃん、お誕生日おめでとう！</p>
+        <button onclick="start()">GAME START</button>
+        <button class="btn-sub" onclick="openCollection()">COLLECTION</button>
+    </div>
+
+    <div id="collection-screen" class="modal">
+        <h2 style="color:var(--sub-color);">COLLECTION</h2>
+        <div id="col-container" class="col-list"></div>
+        <div id="complete-area" style="display:none; padding:15px; background:#303; border-radius:15px; margin-bottom:20px; width:85%; font-size:13px;"></div>
+        <button onclick="closeCollection()">BACK</button>
     </div>
 
     <div id="play-area" style="width:100%; height:100%;"></div>
@@ -84,14 +102,13 @@
         <div id="get-item" style="font-size:60px; margin:5px 0;">🎸</div>
         <p id="item-msg" style="font-size: 14px; line-height: 1.6; color: #444; margin-bottom: 10px;"></p>
         <p id="result-time-text" style="font-family:monospace; font-weight: bold; font-size:18px; margin: 5px 0;"></p>
-        <button onclick="closeModal()">CLOSE</button>
+        <button id="res-btn" onclick="handleResultButton()">NEXT</button>
     </div>
 </div>
 
 <script>
     const GOAL = 50;
     const ITEMS = ['🎸', '🎹', '🥁', '🎤', '🎷'];
-    
     const MESSAGES = {
         '🎸': '【情熱のギター】をゲット！<br>自分の好きなことに真っ直ぐ突き進む1年になりますように！かっちゃんのチャレンジの成功を祈ります！',
         '🎹': '【気品あるピアノ】をゲット！<br>どんな時も自分らしく楽しくすごそうね！いつもおしゃれなかっちゃんが大好き！',
@@ -99,20 +116,17 @@
         '🎤': '【輝く黄金マイク】をゲット！<br>年末のフェスも競馬も楽しかったです。また一緒に行ってくれると嬉しいな',
         '🎷': '【響きわたるサックス】をゲット！<br>魅力あふれる1年になりますように！メリポ楽しみすぎです！最高の思い出をたくさん作っていこうね！'
     };
-
     const COMPLETE_MSG = "★ ALL COMPLETE ★<br>すべての楽器が揃ったよ！おめでとう！<br>かっちゃんの周りにはいつも素敵な音楽と笑顔が溢れています。この1年が、今までにないくらいハッピーな毎日になりますように！いつも応援しているよ。お誕生日おめでとう！";
 
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     let score = 0, fever = 0, isFever = false, gameState = 'title', notes = [];
-    let startTime, timerInterval;
+    let startTime, timerInterval, currentGotItem = null, isFinalStep = false;
     
-    let bestTime = localStorage.getItem('katchan_best_v13') || 99.99;
-    let collection = JSON.parse(localStorage.getItem('katchan_col_v13')) || [];
+    let bestTime = localStorage.getItem('katchan_best_time') || 99.99;
+    let collection = JSON.parse(localStorage.getItem('katchan_collection')) || [];
 
-    // 初期化
     document.getElementById('hi-score').innerText = parseFloat(bestTime).toFixed(2);
     updateCollectionUI();
-    checkCompleteAtHome();
 
     function playNote(freq, type, duration, vol=0.1) {
         const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
@@ -123,7 +137,7 @@
 
     function start() {
         if (audioCtx.state === 'suspended') audioCtx.resume();
-        gameState = 'play'; score = 0; fever = 0;
+        gameState = 'play'; score = 0; fever = 0; isFinalStep = false;
         document.getElementById('title-screen').style.display = 'none';
         startTime = Date.now();
         timerInterval = setInterval(() => {
@@ -160,7 +174,10 @@
         tap() {
             if (gameState !== 'play' && gameState !== 'fever') return;
             if(this.fake) { playNote(100, 'sawtooth', 0.4, 0.2); score = Math.max(0, score-3); fever = 0; }
-            else { playNote(this.fever?900:600, 'sine', 0.1); score += 1; if(!this.fever) { fever += 15; if(fever>=100) activateFever(); } }
+            else { 
+                playNote(this.fever?900:600, 'sine', 0.1); score += 1;
+                if(!this.fever) { fever += 15; if(fever>=100) activateFever(); }
+            }
             this.el.remove(); notes = notes.filter(n=>n!==this);
             updateUI(); resupply();
             if(score >= GOAL) showResult();
@@ -171,46 +188,91 @@
 
     function activateFever() {
         if (gameState !== 'play') return;
-        gameState = 'fever'; isFever = true; fever = 100; document.body.classList.add('fever-active'); playNote(880, 'square', 0.5);
+        gameState = 'fever'; isFever = true; fever = 100;
+        document.body.classList.add('fever-active');
         notes.forEach(n => { if(n.fake) n.el.remove(); }); notes = notes.filter(n => !n.fake);
-        setTimeout(() => { if (gameState !== 'fever') return; gameState = 'play'; isFever = false; fever = 0; document.body.classList.remove('fever-active'); notes.forEach(n => n.el.remove()); notes = []; updateUI(); resupply(); }, 5000); 
+        setTimeout(() => { 
+            if (gameState !== 'fever') return;
+            gameState = 'play'; isFever = false; fever = 0;
+            document.body.classList.remove('fever-active');
+            notes.forEach(n => n.el.remove()); notes = [];
+            updateUI(); resupply();
+        }, 5000);
     }
 
     function updateUI() { document.getElementById('cur-count').innerText = `${score} / ${GOAL}`; document.getElementById('fever-fill').style.width = fever + '%'; }
 
-    function updateCollectionUI() { ITEMS.forEach(item => { if (collection.includes(item)) document.getElementById(`t-${item}`).classList.add('active'); }); }
-
-    // リザルト表示（個別の楽器メッセージを常に優先表示）
     function showResult() {
         if (gameState === 'ending') return;
-        clearInterval(timerInterval); gameState = 'ending';
+        clearInterval(timerInterval);
+        gameState = 'ending';
         const finalTime = (Date.now() - startTime) / 1000;
+        
         let uncollected = ITEMS.filter(i => !collection.includes(i));
-        let got = uncollected.length > 0 ? uncollected[Math.floor(Math.random()*uncollected.length)] : ITEMS[Math.floor(Math.random()*ITEMS.length)];
+        currentGotItem = uncollected.length > 0 ? uncollected[Math.floor(Math.random()*uncollected.length)] : ITEMS[Math.floor(Math.random()*ITEMS.length)];
         
         if(uncollected.length > 0) {
-            collection.push(got); localStorage.setItem('katchan_col_v13', JSON.stringify(collection));
+            collection.push(currentGotItem);
+            localStorage.setItem('katchan_collection', JSON.stringify(collection));
         }
 
-        document.getElementById('result-title').innerText = finalTime < bestTime ? "NEW RECORD!!" : "Finish!";
-        if(finalTime < bestTime) { bestTime = finalTime; localStorage.setItem('katchan_best_v13', bestTime); }
+        document.getElementById('get-item').innerText = currentGotItem;
+        document.getElementById('item-msg').innerHTML = MESSAGES[currentGotItem];
+        document.getElementById('result-time-text').innerText = `CLEAR TIME: ${finalTime.toFixed(2)}s`;
 
-        document.getElementById('get-item').innerText = got;
-        document.getElementById('item-msg').innerHTML = MESSAGES[got];
-        document.getElementById('result-time-text').innerText = `TIME: ${finalTime.toFixed(2)}s`;
-        
-        playNote(523, 'triangle', 1.0, 0.2);
+        let isRecord = false;
+        if(finalTime < bestTime) {
+            bestTime = finalTime; localStorage.setItem('katchan_best_time', bestTime);
+            document.getElementById('result-title').innerText = "NEW RECORD!!"; isRecord = true;
+        } else {
+            document.getElementById('result-title').innerText = "Finish!";
+        }
+
+        isFinalStep = (collection.length === 5);
+        document.getElementById('res-btn').innerText = isFinalStep ? "CHECK COMPLETE" : "BACK TO HOME";
+
+        playNote(523, 'triangle', 0.5);
         notes.forEach(n => n.el.remove()); notes = [];
         document.getElementById('msg-card').style.display = 'block';
     }
 
-    // モーダルを閉じてホームに戻る
-    function closeModal() {
-        document.getElementById('msg-card').style.display = 'none';
-        if (gameState === 'ending') location.reload();
+    function handleResultButton() {
+        if (isFinalStep) {
+            document.getElementById('result-title').innerText = "HAPPY BIRTHDAY!!!";
+            document.getElementById('get-item').innerText = "🎂";
+            document.getElementById('item-msg').innerHTML = COMPLETE_MSG;
+            document.getElementById('msg-card').style.boxShadow = "0 0 50px gold";
+            document.getElementById('res-btn').innerText = "BACK TO HOME";
+            isFinalStep = false;
+            playNote(659, 'triangle', 1.0);
+        } else {
+            location.reload();
+        }
     }
 
-    // ホーム画面でコンプリートチェック
-    function checkCompleteAtHome() {
+    function openCollection() {
+        const container = document.getElementById('col-container');
+        container.innerHTML = '';
+        ITEMS.forEach(item => {
+            const div = document.createElement('div');
+            div.className = `col-item ${collection.includes(item) ? '' : 'locked'}`;
+            div.innerHTML = `
+                <div class="col-icon">${item}</div>
+                <div class="col-text">${collection.includes(item) ? MESSAGES[item] : '???'}</div>
+            `;
+            container.appendChild(div);
+        });
         if (collection.length === 5) {
-            document.getElementById('home-desc').innerHTML = "<span style='color:var(--
+            const area = document.getElementById('complete-area');
+            area.style.display = 'block';
+            area.innerHTML = `<strong>MESSAGE FROM SPECIAL</strong><br>${COMPLETE_MSG}`;
+        }
+        document.getElementById('collection-screen').style.display = 'flex';
+    }
+
+    function closeCollection() { document.getElementById('collection-screen').style.display = 'none'; }
+    function updateCollectionUI() { ITEMS.forEach(item => { if (collection.includes(item)) document.getElementById(`t-${item}`).classList.add('active'); }); }
+    function gameLoop() { if(gameState === 'play' || gameState === 'fever') notes.forEach(n=>n.update()); requestAnimationFrame(gameLoop); }
+</script>
+</body>
+</html>
