@@ -6,9 +6,9 @@
     <title>Music Birthday for KATCHAN</title>
 
     <meta property="og:title" content="Happy Birthday KATCHAN!">
-    <meta property="og:description" content="音符を集めて楽器をコンプリートしよう！誕生日おめでとう！">
+    <meta property="og:description" content="楽器を集めて思い出をコンプリートしよう！誕生日おめでとう！">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://Lanchangames.github.io/kasumihappybirthday/">
+    <meta property="og:url" content="https:/Lanchangames/.github.io/kasumihappybirthday/">
     <meta property="og:image" content="https://raw.githubusercontent.com/Lanchangames/kasumihappybirthday/main/image.png">
 
     <style>
@@ -31,8 +31,8 @@
         @keyframes bg-flash { from { background-color: #440044; } to { background-color: #660066; } }
 
         #ui { position: absolute; top: 0; width: 100%; z-index: 100; padding-top: env(safe-area-inset-top); background: rgba(0,0,0,0.85); pointer-events: none; border-bottom: 2px solid #333; }
-        #top-collection { display: flex; justify-content: center; gap: 10px; padding: 4px 0; }
-        .top-item { font-size: 20px; opacity: 0.15; transition: 0.5s; }
+        #top-collection { display: flex; justify-content: center; gap: 10px; padding: 8px 0; pointer-events: auto; }
+        .top-item { font-size: 24px; opacity: 0.15; transition: 0.5s; cursor: pointer; }
         .top-item.active { opacity: 1; filter: drop-shadow(0 0 8px white); transform: scale(1.1); }
         #score-panel { display: flex; justify-content: center; align-items: baseline; gap: 25px; padding: 8px 0; }
         .score-num { font-size: 24px; font-weight: bold; }
@@ -45,13 +45,11 @@
         #title-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
         #msg-card { 
             display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            width: 85%; background: white; color: #333; padding: 20px; border-radius: 20px; 
+            width: 85%; background: white; color: #333; padding: 25px; border-radius: 20px; 
             z-index: 2000; text-align: center; box-shadow: 0 0 50px var(--accent-color); 
             max-height: 80vh; overflow-y: auto;
         }
-        button { background: var(--accent-color); color: white; border: none; padding: 15px 40px; border-radius: 40px; font-size: 18px; font-weight: bold; margin-top: 10px; }
-        #final-boss { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 130px; z-index: 500; animation: spin 2s linear infinite; }
-        @keyframes spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+        button { background: var(--accent-color); color: white; border: none; padding: 15px 40px; border-radius: 40px; font-size: 18px; font-weight: bold; margin-top: 15px; }
     </style>
 </head>
 <body>
@@ -59,8 +57,11 @@
 <div id="game-container">
     <div id="ui">
         <div id="top-collection">
-            <span class="top-item" id="t-🎸">🎸</span><span class="top-item" id="t-🎹">🎹</span>
-            <span class="top-item" id="t-🥁">🥁</span><span class="top-item" id="t-🎤">🎤</span><span class="top-item" id="t-🎷">🎷</span>
+            <span class="top-item" id="t-🎸" onclick="showPastMessage('🎸')">🎸</span>
+            <span class="top-item" id="t-🎹" onclick="showPastMessage('🎹')">🎹</span>
+            <span class="top-item" id="t-🥁" onclick="showPastMessage('🥁')">🥁</span>
+            <span class="top-item" id="t-🎤" onclick="showPastMessage('🎤')">🎤</span>
+            <span class="top-item" id="t-🎷" onclick="showPastMessage('🎷')">🎷</span>
         </div>
         <div id="score-panel">
             <div style="text-align:center;"><span style="font-size:9px; color:var(--sub-color);">BEST TIME</span><br><span id="hi-score" class="score-num">--.--</span></div>
@@ -72,7 +73,7 @@
 
     <div id="title-screen">
         <h1 style="color:var(--accent-color); font-size:32px;">Happy Birthday!</h1>
-        <p>かっちゃん、お誕生日おめでとう！<br>50個の音符を集めて、思い出をコンプリートしてね！</p>
+        <p id="home-desc">音符を50個集めて楽器をコンプリートしよう！<br>集めた楽器をタップするとメッセージが読めるよ。</p>
         <button onclick="start()">START!</button>
     </div>
 
@@ -83,12 +84,12 @@
         <div id="get-item" style="font-size:60px; margin:5px 0;">🎸</div>
         <p id="item-msg" style="font-size: 14px; line-height: 1.6; color: #444; margin-bottom: 10px;"></p>
         <p id="result-time-text" style="font-family:monospace; font-weight: bold; font-size:18px; margin: 5px 0;"></p>
-        <button id="next-btn" onclick="location.reload()">NEXT STAGE</button>
+        <button onclick="closeModal()">CLOSE</button>
     </div>
 </div>
 
 <script>
-    const GOAL = 50; // 上限を50に変更
+    const GOAL = 50;
     const ITEMS = ['🎸', '🎹', '🥁', '🎤', '🎷'];
     
     const MESSAGES = {
@@ -105,22 +106,19 @@
     let score = 0, fever = 0, isFever = false, gameState = 'title', notes = [];
     let startTime, timerInterval;
     
-    let bestTime = localStorage.getItem('katchan_best_time') || 99.99;
-    let collection = JSON.parse(localStorage.getItem('katchan_collection')) || [];
+    let bestTime = localStorage.getItem('katchan_best_v13') || 99.99;
+    let collection = JSON.parse(localStorage.getItem('katchan_col_v13')) || [];
 
+    // 初期化
     document.getElementById('hi-score').innerText = parseFloat(bestTime).toFixed(2);
     updateCollectionUI();
+    checkCompleteAtHome();
 
     function playNote(freq, type, duration, vol=0.1) {
         const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
         o.type = type; o.frequency.setValueAtTime(freq, audioCtx.currentTime);
         g.gain.setValueAtTime(vol, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
         o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + duration);
-    }
-
-    function playFanfare(isRecord, isComplete) {
-        const chords = isComplete ? [523, 659, 783, 1046, 1318] : (isRecord ? [523, 659, 783, 1046] : [261, 329, 392, 523]);
-        chords.forEach((f, i) => setTimeout(() => playNote(f, 'triangle', 1.0, 0.15), i * 120));
     }
 
     function start() {
@@ -147,11 +145,9 @@
             else { this.el.innerText = ['♪','♫','♬'][Math.floor(Math.random()*3)]; this.el.style.color = `hsl(${Math.random()*360},90%,75%)`; }
             this.x = Math.random()*(window.innerWidth-80);
             this.y = Math.random()*(window.innerHeight-280)+180;
-            
             let s = (this.fever ? 3.5 : 2.2) + (score * 0.02); 
             let a = Math.random()*Math.PI*2;
             this.vx = Math.cos(a)*s; this.vy = Math.sin(a)*s;
-            
             document.getElementById('play-area').appendChild(this.el);
             this.el.addEventListener('touchstart', (e)=>{ e.preventDefault(); this.tap(); });
         }
@@ -162,30 +158,12 @@
             this.el.style.transform = `translate(${this.x}px, ${this.y}px)`;
         }
         tap() {
-            // ゲームオーバー/クリア後はタップ無効（バグ対策）
             if (gameState !== 'play' && gameState !== 'fever') return;
-
-            if(this.fake) {
-                playNote(100, 'sawtooth', 0.4, 0.2); 
-                score = Math.max(0, score-3); 
-                fever = 0;
-            } else {
-                playNote(this.fever?900:600, 'sine', 0.1);
-                score += 1;
-                if(!this.fever) { 
-                    fever += 15; 
-                    if(fever>=100) activateFever(); 
-                }
-            }
-            this.el.remove(); 
-            notes = notes.filter(n=>n!==this);
-            updateUI(); 
-            resupply();
-
-            // 上限に達したら即座に終了処理へ（バグ対策：isFever 中でも GOAL に達したら終了）
-            if(score >= GOAL) {
-                showResult();
-            }
+            if(this.fake) { playNote(100, 'sawtooth', 0.4, 0.2); score = Math.max(0, score-3); fever = 0; }
+            else { playNote(this.fever?900:600, 'sine', 0.1); score += 1; if(!this.fever) { fever += 15; if(fever>=100) activateFever(); } }
+            this.el.remove(); notes = notes.filter(n=>n!==this);
+            updateUI(); resupply();
+            if(score >= GOAL) showResult();
         }
     }
 
@@ -193,73 +171,46 @@
 
     function activateFever() {
         if (gameState !== 'play') return;
-        gameState = 'fever'; 
-        isFever = true; 
-        fever = 100; 
-        document.body.classList.add('fever-active'); 
-        playNote(880, 'square', 0.5);
-
-        notes.forEach(n => { if(n.fake) n.el.remove(); }); 
-        notes = notes.filter(n => !n.fake);
-
-        setTimeout(() => { 
-            if (gameState !== 'fever') return; // すでにゴールしてたら何もしない
-            gameState = 'play';
-            isFever = false; 
-            fever = 0; 
-            document.body.classList.remove('fever-active'); 
-            notes.forEach(n => n.el.remove()); 
-            notes = []; 
-            updateUI(); 
-            resupply(); 
-        }, 5000); 
+        gameState = 'fever'; isFever = true; fever = 100; document.body.classList.add('fever-active'); playNote(880, 'square', 0.5);
+        notes.forEach(n => { if(n.fake) n.el.remove(); }); notes = notes.filter(n => !n.fake);
+        setTimeout(() => { if (gameState !== 'fever') return; gameState = 'play'; isFever = false; fever = 0; document.body.classList.remove('fever-active'); notes.forEach(n => n.el.remove()); notes = []; updateUI(); resupply(); }, 5000); 
     }
 
     function updateUI() { document.getElementById('cur-count').innerText = `${score} / ${GOAL}`; document.getElementById('fever-fill').style.width = fever + '%'; }
 
     function updateCollectionUI() { ITEMS.forEach(item => { if (collection.includes(item)) document.getElementById(`t-${item}`).classList.add('active'); }); }
 
+    // リザルト表示（個別の楽器メッセージを常に優先表示）
     function showResult() {
-        if (gameState === 'ending') return; // 重複実行防止
-        clearInterval(timerInterval); 
-        gameState = 'ending';
-        isFever = false;
-        document.body.classList.remove('fever-active');
-        
+        if (gameState === 'ending') return;
+        clearInterval(timerInterval); gameState = 'ending';
         const finalTime = (Date.now() - startTime) / 1000;
-        
         let uncollected = ITEMS.filter(i => !collection.includes(i));
         let got = uncollected.length > 0 ? uncollected[Math.floor(Math.random()*uncollected.length)] : ITEMS[Math.floor(Math.random()*ITEMS.length)];
         
-        let isComplete = false;
         if(uncollected.length > 0) {
-            collection.push(got); localStorage.setItem('katchan_collection', JSON.stringify(collection));
-            if(collection.length === 5) isComplete = true;
+            collection.push(got); localStorage.setItem('katchan_col_v13', JSON.stringify(collection));
         }
+
+        document.getElementById('result-title').innerText = finalTime < bestTime ? "NEW RECORD!!" : "Finish!";
+        if(finalTime < bestTime) { bestTime = finalTime; localStorage.setItem('katchan_best_v13', bestTime); }
 
         document.getElementById('get-item').innerText = got;
-        document.getElementById('item-msg').innerHTML = isComplete ? COMPLETE_MSG : MESSAGES[got];
-        document.getElementById('result-time-text').innerText = `CLEAR TIME: ${finalTime.toFixed(2)}s`;
-
-        let isRecord = false;
-        if(finalTime < bestTime) {
-            bestTime = finalTime; localStorage.setItem('katchan_best_time', bestTime);
-            document.getElementById('result-title').innerText = "NEW RECORD!!"; isRecord = true;
-        }
-
-        if(isComplete) {
-            document.getElementById('msg-card').style.boxShadow = "0 0 50px gold";
-            document.getElementById('result-title').innerText = "HAPPY BIRTHDAY!!!";
-            document.getElementById('next-btn').innerText = "PLAY AGAIN";
-        }
-
-        playFanfare(isRecord, isComplete);
-        notes.forEach(n => n.el.remove());
-        notes = [];
+        document.getElementById('item-msg').innerHTML = MESSAGES[got];
+        document.getElementById('result-time-text').innerText = `TIME: ${finalTime.toFixed(2)}s`;
+        
+        playNote(523, 'triangle', 1.0, 0.2);
+        notes.forEach(n => n.el.remove()); notes = [];
         document.getElementById('msg-card').style.display = 'block';
     }
 
-    function gameLoop() { if(gameState === 'play' || gameState === 'fever') notes.forEach(n=>n.update()); requestAnimationFrame(gameLoop); }
-</script>
-</body>
-</html>
+    // モーダルを閉じてホームに戻る
+    function closeModal() {
+        document.getElementById('msg-card').style.display = 'none';
+        if (gameState === 'ending') location.reload();
+    }
+
+    // ホーム画面でコンプリートチェック
+    function checkCompleteAtHome() {
+        if (collection.length === 5) {
+            document.getElementById('home-desc').innerHTML = "<span style='color:var(--
