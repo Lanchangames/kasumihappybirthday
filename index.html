@@ -5,16 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Music Birthday for KATCHAN</title>
 
-    <meta property="og:title" content="Happy Birthday かっちゃん!">
+    <meta property="og:title" content="Happy Birthday KATCHAN!">
     <meta property="og:description" content="音符を集めて楽器をコンプリートしよう！誕生日おめでとう！">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https:/Lanchangames/.github.io/kasumihappybirthday/">
+    <meta property="og:url" content="https://Lanchangames.github.io/kasumihappybirthday/">
     <meta property="og:image" content="https://raw.githubusercontent.com/Lanchangames/kasumihappybirthday/main/image.png">
-
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Happy Birthday かっちゃん!">
-    <meta name="twitter:description" content="音符を集めて楽器をコンプリートしよう！">
-    <meta name="twitter:image" content="https://raw.githubusercontent.com/Lanchangames/kasumihappybirthday/main/image.png">
 
     <style>
         :root {
@@ -32,11 +27,9 @@
             transition: background-color 0.5s;
         }
 
-        /* --- フィーバー演出：背景の明滅 --- */
         body.fever-active { background-color: #330033; animation: bg-flash 0.5s infinite alternate; }
         @keyframes bg-flash { from { background-color: #440044; } to { background-color: #660066; } }
 
-        /* --- UIバー --- */
         #ui { position: absolute; top: 0; width: 100%; z-index: 100; padding-top: env(safe-area-inset-top); background: rgba(0,0,0,0.85); pointer-events: none; border-bottom: 2px solid #333; }
         #top-collection { display: flex; justify-content: center; gap: 10px; padding: 4px 0; }
         .top-item { font-size: 20px; opacity: 0.15; transition: 0.5s; }
@@ -47,12 +40,8 @@
         #fever-bar { width: 100%; height: 8px; background: #222; }
         #fever-fill { width: 0%; height: 100%; background: var(--fever-color); transition: width 0.1s linear; box-shadow: 0 0 15px var(--fever-color); }
 
-        /* --- ゲーム要素 --- */
         .note { position: absolute; font-size: 55px; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; z-index: 10; filter: drop-shadow(0 0 12px currentColor); }
-        .particle { position: absolute; pointer-events: none; z-index: 100; border-radius: 50%; animation: p-fade forwards ease-out; }
-        @keyframes p-fade { to { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; } }
-
-        /* --- モーダル（タイトル/メッセージ） --- */
+        
         #title-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
         #msg-card { 
             display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
@@ -61,6 +50,8 @@
             max-height: 80vh; overflow-y: auto;
         }
         button { background: var(--accent-color); color: white; border: none; padding: 15px 40px; border-radius: 40px; font-size: 18px; font-weight: bold; margin-top: 10px; }
+        #final-boss { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 130px; z-index: 500; animation: spin 2s linear infinite; }
+        @keyframes spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -73,7 +64,7 @@
         </div>
         <div id="score-panel">
             <div style="text-align:center;"><span style="font-size:9px; color:var(--sub-color);">BEST TIME</span><br><span id="hi-score" class="score-num">--.--</span></div>
-            <div style="text-align:center;"><span style="font-size:9px; color:var(--sub-color);">COUNT</span><br><span id="cur-count" class="score-num">0 / 40</span></div>
+            <div style="text-align:center;"><span style="font-size:9px; color:var(--sub-color);">COUNT</span><br><span id="cur-count" class="score-num">0 / 50</span></div>
         </div>
         <div id="timer-display">TIME: <span id="timer-val" style="color:var(--accent-color); font-weight:bold;">0.00</span>s</div>
         <div id="fever-bar"><div id="fever-fill"></div></div>
@@ -81,7 +72,7 @@
 
     <div id="title-screen">
         <h1 style="color:var(--accent-color); font-size:32px;">Happy Birthday!</h1>
-        <p>かっちゃん、お誕生日おめでとう！<br>40個の音符を集めて、思い出をコンプリートしてね！</p>
+        <p>かっちゃん、お誕生日おめでとう！<br>50個の音符を集めて、思い出をコンプリートしてね！</p>
         <button onclick="start()">START!</button>
     </div>
 
@@ -97,10 +88,9 @@
 </div>
 
 <script>
-    const GOAL = 40;
+    const GOAL = 50; // 上限を50に変更
     const ITEMS = ['🎸', '🎹', '🥁', '🎤', '🎷'];
     
-    // かっちゃん専用メッセージ
     const MESSAGES = {
         '🎸': '【情熱のギター】をゲット！<br>自分の好きなことに真っ直ぐ突き進む1年になりますように！かっちゃんのチャレンジの成功を祈ります！',
         '🎹': '【気品あるピアノ】をゲット！<br>どんな時も自分らしく楽しくすごそうね！いつもおしゃれなかっちゃんが大好き！',
@@ -115,7 +105,6 @@
     let score = 0, fever = 0, isFever = false, gameState = 'title', notes = [];
     let startTime, timerInterval;
     
-    // ハイスコア（最短タイム）とコレクションの読み込み
     let bestTime = localStorage.getItem('katchan_best_time') || 99.99;
     let collection = JSON.parse(localStorage.getItem('katchan_collection')) || [];
 
@@ -159,7 +148,6 @@
             this.x = Math.random()*(window.innerWidth-80);
             this.y = Math.random()*(window.innerHeight-280)+180;
             
-            // 難易度調整：ゆっくり
             let s = (this.fever ? 3.5 : 2.2) + (score * 0.02); 
             let a = Math.random()*Math.PI*2;
             this.vx = Math.cos(a)*s; this.vy = Math.sin(a)*s;
@@ -174,37 +162,54 @@
             this.el.style.transform = `translate(${this.x}px, ${this.y}px)`;
         }
         tap() {
-            if(this.fake) { playNote(100, 'sawtooth', 0.4, 0.2); score = Math.max(0, score-3); fever = 0; }
-            else { playNote(this.fever?900:600, 'sine', 0.1); score += 1; if(!this.fever) { fever += 15; if(fever>=100) activateFever(); } }
-            this.el.remove(); notes = notes.filter(n=>n!==this);
-            updateUI(); resupply();
-            if(score >= GOAL && !isFever) showResult();
+            // ゲームオーバー/クリア後はタップ無効（バグ対策）
+            if (gameState !== 'play' && gameState !== 'fever') return;
+
+            if(this.fake) {
+                playNote(100, 'sawtooth', 0.4, 0.2); 
+                score = Math.max(0, score-3); 
+                fever = 0;
+            } else {
+                playNote(this.fever?900:600, 'sine', 0.1);
+                score += 1;
+                if(!this.fever) { 
+                    fever += 15; 
+                    if(fever>=100) activateFever(); 
+                }
+            }
+            this.el.remove(); 
+            notes = notes.filter(n=>n!==this);
+            updateUI(); 
+            resupply();
+
+            // 上限に達したら即座に終了処理へ（バグ対策：isFever 中でも GOAL に達したら終了）
+            if(score >= GOAL) {
+                showResult();
+            }
         }
     }
 
-    // 表示量を少なめに設定（通常6個、フィーバー12個）
-    function resupply() { if(gameState !== 'play') return; const target = isFever ? 12 : 6; while(notes.length < target) notes.push(new Note(isFever)); }
+    function resupply() { if(gameState !== 'play' && gameState !== 'fever') return; const target = isFever ? 12 : 6; while(notes.length < target) notes.push(new Note(isFever)); }
 
     function activateFever() {
+        if (gameState !== 'play') return;
+        gameState = 'fever'; 
         isFever = true; 
         fever = 100; 
         document.body.classList.add('fever-active'); 
         playNote(880, 'square', 0.5);
 
-        // お邪魔（ドクロ）を消去
         notes.forEach(n => { if(n.fake) n.el.remove(); }); 
         notes = notes.filter(n => !n.fake);
 
-        // フィーバー時間を5秒（5000ms）に設定
         setTimeout(() => { 
+            if (gameState !== 'fever') return; // すでにゴールしてたら何もしない
+            gameState = 'play';
             isFever = false; 
             fever = 0; 
             document.body.classList.remove('fever-active'); 
-            
-            // フィーバー終了時に一旦リセットして通常モードへ
             notes.forEach(n => n.el.remove()); 
             notes = []; 
-            
             updateUI(); 
             resupply(); 
         }, 5000); 
@@ -215,10 +220,14 @@
     function updateCollectionUI() { ITEMS.forEach(item => { if (collection.includes(item)) document.getElementById(`t-${item}`).classList.add('active'); }); }
 
     function showResult() {
-        clearInterval(timerInterval); gameState = 'ending';
+        if (gameState === 'ending') return; // 重複実行防止
+        clearInterval(timerInterval); 
+        gameState = 'ending';
+        isFever = false;
+        document.body.classList.remove('fever-active');
+        
         const finalTime = (Date.now() - startTime) / 1000;
         
-        // 未獲得のアイテムを優先
         let uncollected = ITEMS.filter(i => !collection.includes(i));
         let got = uncollected.length > 0 ? uncollected[Math.floor(Math.random()*uncollected.length)] : ITEMS[Math.floor(Math.random()*ITEMS.length)];
         
@@ -245,10 +254,12 @@
         }
 
         playFanfare(isRecord, isComplete);
+        notes.forEach(n => n.el.remove());
+        notes = [];
         document.getElementById('msg-card').style.display = 'block';
     }
 
-    function gameLoop() { if(gameState === 'play') notes.forEach(n=>n.update()); requestAnimationFrame(gameLoop); }
+    function gameLoop() { if(gameState === 'play' || gameState === 'fever') notes.forEach(n=>n.update()); requestAnimationFrame(gameLoop); }
 </script>
 </body>
 </html>
